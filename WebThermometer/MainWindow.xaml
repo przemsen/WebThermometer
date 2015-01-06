@@ -1,0 +1,90 @@
+﻿<Window x:Class="WebThermometer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:tb="http://www.hardcodet.net/taskbar"
+        xmlns:local="clr-namespace:WebThermometer"
+        Title="Web Thermometer" Height="151" Width="207" MouseLeftButtonDown="OnWindowMouseLeftButtonDown" 
+        ShowInTaskbar="False" WindowStartupLocation="CenterScreen" ResizeMode="NoResize" BorderBrush="#FF4D4D4D" 
+        WindowStyle="None"
+        >
+    <Window.Background>
+        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+            <GradientStop Color="#FFFFFF" Offset="1"/>
+            <GradientStop Color="#F1CA14" Offset="0"/>
+        </LinearGradientBrush>
+    </Window.Background>
+
+    <Border BorderThickness="1">
+        <Border.BorderBrush>
+            <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.InactiveCaptionTextColorKey}}"/>
+        </Border.BorderBrush>
+
+        <Grid Margin="3,0,3,2">
+            <Grid.Resources>
+                <Style TargetType="TextBox">
+                    <Setter Property="TextAlignment" Value="Right" />
+                    <Setter Property="FontFamily" Value="Arial" />
+                    <Setter Property="FontWeight" Value="Bold" />
+                </Style>
+                <Style TargetType="TextBlock">
+                    <Setter Property="FontFamily" Value="Arial" />
+                </Style>
+            </Grid.Resources>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30" />
+                <RowDefinition Height="30" />
+                <RowDefinition Height="30" />
+                <RowDefinition Height="30" />
+                <RowDefinition Height="30" />
+                <RowDefinition  />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="80" />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Row="0" VerticalAlignment="Center" Text="{Binding Label1}" />
+            <TextBox Text="{Binding Value1}" Grid.Row="0" HorizontalAlignment="Right"  VerticalAlignment="Center" Grid.Column="1" Width="100" IsReadOnly="True" Focusable="False" />
+
+            <TextBlock Grid.Row="1" VerticalAlignment="Center" Text="{Binding Label2}"/>
+            <TextBox Text="{Binding Value2}" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="1" Width="100" Focusable="False" IsReadOnly="True" />
+
+            <TextBlock Grid.Row="2" VerticalAlignment="Center" Text="{Binding Label3}"/>
+            <TextBox Text="{Binding Value3}" Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="1" Width="100" Focusable="False" IsReadOnly="True" />
+
+            <TextBlock Grid.Row="3" VerticalAlignment="Center" Text="{Binding Label4}"/>
+            <TextBox Text="{Binding Value4}" Grid.Row="3" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="1" Width="100" IsReadOnly="True" Focusable="False" />
+
+            <TextBlock Grid.Row="4" VerticalAlignment="Center" Text="{Binding Label5}"/>
+            <TextBox Text="{Binding Value5}" Grid.Row="4" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="1" Width="100" Focusable="False" IsReadOnly="True" />
+
+            <!--
+            <DockPanel Grid.Row="5" Grid.ColumnSpan="2" >
+                <TextBox Text="{Binding Status}" Margin="0,0,0,2" DockPanel.Dock="Bottom" Width="Auto" Height="20" VerticalAlignment="Bottom" Foreground="#FF7E7E7E" FontSize="10" IsReadOnly="True" FontWeight="Normal" TextAlignment="Center" />
+            </DockPanel> 
+            -->
+
+            <tb:TaskbarIcon MouseLeftButtonDown="OnTrayIconMouseLeftButtonDown" IconSource="/thermometer.ico">
+                <tb:TaskbarIcon.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Exit" Click="OnCtxMenuExitClick" />
+                    </ContextMenu>
+                </tb:TaskbarIcon.ContextMenu>
+
+                <tb:TaskbarIcon.TrayToolTip>
+                    <Border Padding="1,1,1,1">
+                        <Border.Background>
+                            <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.InfoColorKey}}"/>
+                        </Border.Background>
+                        <TextBlock Text="{Binding Status}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"  />
+                    </Border>
+                </tb:TaskbarIcon.TrayToolTip>
+
+            </tb:TaskbarIcon>
+        </Grid>
+
+    </Border>
+
+
+</Window>
