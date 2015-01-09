@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -25,7 +26,7 @@ namespace WebThermometer
     public partial class MainWindow : Window
     {
         private const int             _defaultRefreshIntervalSec = 300;
-        private const int             _waitForNetworkAfterSleepResumeDelayMillisec = 5000;
+        private const int             _waitForNetworkAfterSleepResumeDelayMillisec = 10000;
         private       App             _app;
         private       DispatcherTimer _timer;      
 
@@ -56,11 +57,10 @@ namespace WebThermometer
             {
                 Thread.Sleep(_waitForNetworkAfterSleepResumeDelayMillisec);
                 _timer.Start();
-                ViewModel.Refresh();
-                
+                ViewModel.Refresh();                                     
             }
             else if (e.Mode == PowerModes.Suspend)
-            {
+            {                  
                 _timer.Stop();
             }
 
@@ -76,9 +76,21 @@ namespace WebThermometer
             _app.Shutdown();
         }
 
-        private void OnTrayIconMouseLeftButtonDown(object sender, RoutedEventArgs e)
+        internal void ShowWindow()
         {
-            Activate();
+            if (IsVisible)
+            {
+                Show();
+            }
+
+            if (WindowState == WindowState.Minimized)
+            {
+                WindowState = WindowState.Normal;
+            }
+
+            Activate(); 
+            Topmost = true;  
+            Topmost = false; 
         }
 
         private void OnWindowMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
