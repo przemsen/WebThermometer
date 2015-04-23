@@ -2,105 +2,110 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+
 
 namespace WebThermometer
 {
     public class MeteoWawPlDataService : IDataService
     {
-        private const String _url = "http://www.meteo.waw.pl";
-        private const String _err = "Błąd połączenia";
-        private HtmlWeb      _htmlWeb;
-        private HtmlDocument _htmlDoc;
-        private bool         _isInValidState;
+        private static readonly Regex _numberRegex = new Regex(@"-?\s*\d+,\d+", RegexOptions.Compiled);
+        private const String          _url         = "http://www.meteo.waw.pl";
+        private const String          _ioErr       = "Błąd połączenia";
+        private const String          _parseErr    = "Błąd treści";
+        private HtmlWeb               _htmlWeb;
+        private HtmlDocument          _htmlDoc;
+        private bool                  _isInValidState;
 
         public void Refresh()
         {
             _isInValidState = true;
             try
             {
-                _htmlDoc = _htmlWeb.Load(_url);              
+                _htmlDoc = _htmlWeb.Load(_url);
+
             }
             catch
             {
                 _isInValidState = false;
             }
         }
-        
+
         public MeteoWawPlDataService()
         {
             _htmlWeb = new HtmlWeb();
             Refresh();
         }
-        
-        public String GetValue1()
-        {  
-            if (!_isInValidState)
-            {
-                return _err;
-            }
 
-            var node = _htmlDoc.GetElementbyId("PARAM_0_TA") ;  
-            return (node != null) ? node.InnerText + " °C" : null;
-            
+        public String GetValue1()
+        {
+            return ParseTargetValueImpl("msr_short_elm_ta", " °C");
         }
 
         public String GetValue2()
         {
-            if (!_isInValidState)
-            {
-                return _err;
-            }
-
-            var node = _htmlDoc.GetElementbyId("PARAM_0_WCH");
-            return (node != null) ? node.InnerText + " °C" : null;
+            return ParseTargetValueImpl("msr_short_elm_wch", " °C");
 
         }
 
         public String GetValue3()
         {
-            if (!_isInValidState)
-            {
-                return _err;
-            }
-
-            var node = _htmlDoc.GetElementbyId("PARAM_0_RH");
-            return (node != null) ? node.InnerText + " %" : null;
+            return ParseTargetValueImpl("msr_short_elm_rh", " %");
         }
 
         public String GetValue4()
         {
-            if (!_isInValidState)
-            {
-                return _err;
-            }
-            
-            var node = _htmlDoc.GetElementbyId("PARAM_0_PR");
-            return (node != null) ? node.InnerText + " hPa" : null;
-
+            return ParseTargetValueImpl("msr_short_elm_pr", " hPa");
         }
 
         public String GetValue5()
         {
-            if (!_isInValidState)
-            {
-                return _err;
-            }
-            
-            var node = _htmlDoc.GetElementbyId("PARAM_0_WV");
-            return (node != null) ? node.InnerText + " m/s" : null;
+            return ParseTargetValueImpl("msr_short_elm_wv", " m/s");
         }
 
         public String GetStatus()
         {
             if (!_isInValidState)
             {
-                return _err;
+                return _ioErr;
             }
 
             var node = _htmlDoc.GetElementbyId("PARAM_LDATE");
-            return (node != null) ? "meteo.waw.pl: " + node.InnerText : null;            
+            return (node != null) ? "meteo.waw.pl: " + node.InnerText : null;
+        }
+
+        private string ParseTargetValueImpl(string valueName, string appendText)
+        {
+            if (!_isInValidState)
+            {
+                return _ioErr;
+            }
+
+            var node = _htmlDoc.GetElementbyId(valueName);
+
+            if (node == null)
+            {
+                return _parseErr;
+            }
+
+            var target = node.ChildNodes.Where(n => n.Name == "span").FirstOrDefault();
+
+            if (target == null)
+            {
+                return _parseErr;
+            }
+
+            var targetText = target.InnerText;
+
+            if (!_numberRegex.IsMatch(targetText))
+            {
+                return _parseErr;
+            }
+            else
+            {
+                return _numberRegex.Match(targetText).Value + appendText;
+            }
         }
 
 
