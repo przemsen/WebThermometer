@@ -8,20 +8,20 @@ namespace WebThermometer
 {
     public interface IViewModel
     {
-        String Label1 { get; set; }
-        String Label2 { get; set; }
-        String Label3 { get; set; }
-        String Label4 { get; set; }
-        String Label5 { get; set; }
+        string Label1 { get; set; }
+        string Label2 { get; set; }
+        string Label3 { get; set; }
+        string Label4 { get; set; }
+        string Label5 { get; set; }
 
-        String Value1 { get; set; }
-        String Value2 { get; set; }
-        String Value3 { get; set; }
-        String Value4 { get; set; }
-        String Value5 { get; set; }
-        
-        String Status { get; set; }
-        
-        void Refresh();
+        string Value1 { get; set; }
+        string Value2 { get; set; }
+        string Value3 { get; set; }
+        string Value4 { get; set; }
+        string Value5 { get; set; }
+
+        string Status { get; set; }
+
+        Task Refresh();
     }
 }

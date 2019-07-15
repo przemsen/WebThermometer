@@ -1,34 +1,18 @@
 ﻿using Microsoft.Win32;
 using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Windows.Threading;
 
 namespace WebThermometer
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
-        private const int             _defaultRefreshIntervalSec = 300;
-        private const int             _waitForNetworkAfterSleepResumeDelayMillisec = 10000;
-        private       App             _app;
-        private       DispatcherTimer _timer;      
+        private const int _defaultRefreshIntervalSec = 300;
+        private const int _waitForNetworkAfterSleepResumeDelayMillisec = 10000;
+        private App _app;
+        private DispatcherTimer _timer;
 
         public IViewModel ViewModel { get; set; }
 
@@ -40,15 +24,12 @@ namespace WebThermometer
             ViewModel = new MeteoWawPlViewModel();
             DataContext = ViewModel;
 
-            int refreshTime = _defaultRefreshIntervalSec;
-            try { refreshTime = Int32.Parse(ConfigurationManager.AppSettings["RefreshTime"]); } catch { }
-            
             _timer = new DispatcherTimer();
-            _timer.Tick += new EventHandler(OnDispatcherTimerTick);
-            _timer.Interval = new TimeSpan(0, 0, refreshTime);
+            _timer.Tick += OnDispatcherTimerTick;
+            _timer.Interval = new TimeSpan(0, 0, _defaultRefreshIntervalSec);
             _timer.Start();
-            
-            ViewModel.Refresh();           
+
+            ViewModel.Refresh();
         }
 
         private void OnPowerChange(object s, PowerModeChangedEventArgs e)
@@ -57,18 +38,18 @@ namespace WebThermometer
             {
                 Thread.Sleep(_waitForNetworkAfterSleepResumeDelayMillisec);
                 _timer.Start();
-                ViewModel.Refresh();                                     
+                ViewModel.Refresh();
             }
             else if (e.Mode == PowerModes.Suspend)
-            {                  
+            {
                 _timer.Stop();
             }
 
         }
 
-        private void OnDispatcherTimerTick(object sender, EventArgs e)
-        {                     
-            ViewModel.Refresh();
+        private async void OnDispatcherTimerTick(object sender, EventArgs e)
+        {
+            await ViewModel.Refresh();
         }
 
         private void OnCtxMenuExitClick(object sender, RoutedEventArgs e)
@@ -88,9 +69,9 @@ namespace WebThermometer
                 WindowState = WindowState.Normal;
             }
 
-            Activate(); 
-            Topmost = true;  
-            Topmost = false; 
+            Activate();
+            Topmost = true;
+            Topmost = false;
         }
 
         private void OnWindowMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -99,6 +80,4 @@ namespace WebThermometer
         }
 
     }
-
-    
 }

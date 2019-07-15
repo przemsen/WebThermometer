@@ -1,7 +1,7 @@
-﻿using HtmlAgilityPack;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -10,21 +10,31 @@ namespace WebThermometer
 {
     public class MeteoWawPlDataService : IDataService
     {
-        private static readonly Regex _numberRegex = new Regex(@"-?\s*\d+,\d+", RegexOptions.Compiled);
-        private const String          _url         = "http://www.meteo.waw.pl";
-        private const String          _ioErr       = "Błąd połączenia";
-        private const String          _parseErr    = "Błąd treści";
-        private HtmlWeb               _htmlWeb;
-        private HtmlDocument          _htmlDoc;
-        private bool                  _isInValidState;
-
-        public void Refresh()
+        private static readonly HttpClient _httpClient = new HttpClient
         {
-            _isInValidState = true;
+            Timeout = new TimeSpan(0, 0, 5),
+        };
+        private static readonly Regex _tempRegex = new Regex(@"<strong id=""PARAM_TA"">(.+?)</strong>", RegexOptions.Compiled);
+        private static readonly Regex _humidRegex = new Regex(@"<strong id=""PARAM_RH"">(.+?)</strong>", RegexOptions.Compiled);
+        private static readonly Regex _sensedTempRegex = new Regex(@"<strong id=""PARAM_WCH"">(.+?)</strong>", RegexOptions.Compiled);
+        private static readonly Regex _pressRegex = new Regex(@"<strong id=""PARAM_PN"">(.+?)</strong>", RegexOptions.Compiled);
+        private static readonly Regex _windRegex = new Regex(@"<strong id=""PARAM_0_WV"">(.+?)</strong>", RegexOptions.Compiled);
+        private static readonly Regex _timeRegex = new Regex(@"<strong id=""PARAM_LDATE"">(.+?)</strong>", RegexOptions.Compiled);
+
+        private readonly Uri _uri = new Uri(_url);
+        private const string _url = "http://www.meteo.waw.pl";
+        private const string _ioErr = "Błąd połączenia";
+        private const string _parseErr = "Błąd treści";
+
+        private string _htmlSrc;
+        private bool _isInValidState;
+
+        public async Task Refresh()
+        {
             try
             {
-                _htmlDoc = _htmlWeb.Load(_url);
-
+                _htmlSrc = await _httpClient.GetStringAsync(_uri);
+                _isInValidState = true;
             }
             catch
             {
@@ -32,82 +42,50 @@ namespace WebThermometer
             }
         }
 
-        public MeteoWawPlDataService()
+        public string GetValue1()
         {
-            _htmlWeb = new HtmlWeb();
-            Refresh();
+            return ParseTargetValueImpl(_tempRegex, " °C");
         }
 
-        public String GetValue1()
+        public string GetValue2()
         {
-            return ParseTargetValueImpl("msr_short_elm_ta", " °C");
+            return ParseTargetValueImpl(_sensedTempRegex, " °C");
         }
 
-        public String GetValue2()
+        public string GetValue3()
         {
-            return ParseTargetValueImpl("msr_short_elm_wch", " °C");
-
+            return ParseTargetValueImpl(_humidRegex, " %");
         }
 
-        public String GetValue3()
+        public string GetValue4()
         {
-            return ParseTargetValueImpl("msr_short_elm_rh", " %");
+            return ParseTargetValueImpl(_pressRegex, " hPa");
         }
 
-        public String GetValue4()
+        public string GetValue5()
         {
-            return ParseTargetValueImpl("msr_short_elm_pr", " hPa");
+            return ParseTargetValueImpl(_windRegex, " m/s");
         }
 
-        public String GetValue5()
+        public string GetStatus()
         {
-            return ParseTargetValueImpl("msr_short_elm_wv", " m/s");
+            return $"Updated: {ParseTargetValueImpl(_timeRegex, string.Empty)}";
         }
 
-        public String GetStatus()
+        private string ParseTargetValueImpl(Regex regex, string appendText)
         {
             if (!_isInValidState)
             {
                 return _ioErr;
             }
 
-            var node = _htmlDoc.GetElementbyId("PARAM_LDATE");
-            return (node != null) ? "meteo.waw.pl: " + node.InnerText : null;
+            var match = regex.Match(_htmlSrc);
+            if (!match.Success)
+            {
+                return _parseErr;
+            }
+
+            return $"{match.Groups[1].Value.Trim()} {appendText}";
         }
-
-        private string ParseTargetValueImpl(string valueName, string appendText)
-        {
-            if (!_isInValidState)
-            {
-                return _ioErr;
-            }
-
-            var node = _htmlDoc.GetElementbyId(valueName);
-
-            if (node == null)
-            {
-                return _parseErr;
-            }
-
-            var target = node.ChildNodes.Where(n => n.Name == "span").FirstOrDefault();
-
-            if (target == null)
-            {
-                return _parseErr;
-            }
-
-            var targetText = target.InnerText;
-
-            if (!_numberRegex.IsMatch(targetText))
-            {
-                return _parseErr;
-            }
-            else
-            {
-                return _numberRegex.Match(targetText).Value + appendText;
-            }
-        }
-
-
     }
 }

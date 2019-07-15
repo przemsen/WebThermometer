@@ -8,12 +8,12 @@ namespace WebThermometer
 {
     public interface IDataService
     {
-        String GetValue1();
-        String GetValue2();
-        String GetValue3();
-        String GetValue4();
-        String GetValue5();
-        String GetStatus();
-        void Refresh();
+        string GetValue1();
+        string GetValue2();
+        string GetValue3();
+        string GetValue4();
+        string GetValue5();
+        string GetStatus();
+        Task Refresh();
     }
 }

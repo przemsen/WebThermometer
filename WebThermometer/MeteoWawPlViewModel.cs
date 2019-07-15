@@ -10,30 +10,30 @@ namespace WebThermometer
     public class MeteoWawPlViewModel : IViewModel, INotifyPropertyChanged
     {
         private IDataService _service;
-        
-        public event PropertyChangedEventHandler PropertyChanged;
-        
-        public String Label1 { get { return "Temperatura:";   } set { } }
-        public String Label2 { get { return "T. odczuwalna:"; } set { } }
-        public String Label3 { get { return "Wilgotność:";    } set { } }
-        public String Label4 { get { return "Ciśnienie:";     } set { } }
-        public String Label5 { get { return "Wiatr:";         } set { } }
 
-        public String Value1 { get; set; }
-        public String Value2 { get; set; }
-        public String Value3 { get; set; }
-        public String Value4 { get; set; }
-        public String Value5 { get; set; }
-        public String Status { get; set; }
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public string Label1 { get { return "Temperatura:";   } set { } }
+        public string Label2 { get { return "T. odczuwalna:"; } set { } }
+        public string Label3 { get { return "Wilgotność:";    } set { } }
+        public string Label4 { get { return "Ciśnienie:";     } set { } }
+        public string Label5 { get { return "Wiatr:";         } set { } }
+
+        public string Value1 { get; set; }
+        public string Value2 { get; set; }
+        public string Value3 { get; set; }
+        public string Value4 { get; set; }
+        public string Value5 { get; set; }
+        public string Status { get; set; }
 
         public MeteoWawPlViewModel()
         {
             _service = new MeteoWawPlDataService();
         }
 
-        public void Refresh()
+        public async Task Refresh()
         {
-            _service.Refresh();            
+            await _service.Refresh();
             Value1 = _service.GetValue1(); OnPropertyChanged("Value1");
             Value2 = _service.GetValue2(); OnPropertyChanged("Value2");
             Value3 = _service.GetValue3(); OnPropertyChanged("Value3");
@@ -42,14 +42,10 @@ namespace WebThermometer
             Status = _service.GetStatus(); OnPropertyChanged("Status");
         }
 
-        protected void OnPropertyChanged(String propertyName = null)
+        protected void OnPropertyChanged(string propertyName = null)
         {
-            PropertyChangedEventHandler eventHandler = this.PropertyChanged;
-            if (eventHandler != null)
-            {
-                eventHandler(this, new PropertyChangedEventArgs(propertyName));
-            }
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-       
+
     }
 }
