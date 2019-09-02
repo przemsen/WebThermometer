@@ -14,18 +14,6 @@ namespace WebThermometer
             Timeout = new TimeSpan(0, 0, 5)
         };
 
-        private static readonly HttpRequestMessage _httpRequest = new HttpRequestMessage()
-        {
-            RequestUri = new Uri(_url),
-            Method = HttpMethod.Get
-        };
-
-        static MeteoWawPlDataService()
-        {
-            _httpRequest.Headers.Add("Accept", "*/*");
-            _httpRequest.Headers.Add("Host", "www.meteo.waw.pl");
-        }
-
         private static readonly Regex _tempRegex = new Regex(@"<strong id=""PARAM_TA"">(.+?)</strong>", RegexOptions.Compiled);
         private static readonly Regex _humidRegex = new Regex(@"<strong id=""PARAM_RH"">(.+?)</strong>", RegexOptions.Compiled);
         private static readonly Regex _sensedTempRegex = new Regex(@"<strong id=""PARAM_WCH"">(.+?)</strong>", RegexOptions.Compiled);
@@ -44,7 +32,8 @@ namespace WebThermometer
         {
             try
             {
-                var response = await _httpClient.SendAsync(_httpRequest);
+                var request = PrepareHttpRequest();
+                var response = await _httpClient.SendAsync(request);
                 _htmlSrc = await response.Content.ReadAsStringAsync();
                 _isInValidState = true;
             }
@@ -98,6 +87,18 @@ namespace WebThermometer
             }
 
             return $"{match.Groups[1].Value.Trim()} {appendText}";
+        }
+
+        private HttpRequestMessage PrepareHttpRequest()
+        {
+            var _httpRequest = new HttpRequestMessage()
+            {
+                RequestUri = new Uri(_url),
+                Method = HttpMethod.Get,
+            };
+            _httpRequest.Headers.Add("Accept", "*/*");
+            _httpRequest.Headers.Add("Host", "www.meteo.waw.pl");
+            return _httpRequest;
         }
     }
 }
