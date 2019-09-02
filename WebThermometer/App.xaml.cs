@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -17,7 +18,7 @@ namespace WebThermometer
 
         void AppStartup(object sender, StartupEventArgs args)
         {
-
+            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
         }
 
     }

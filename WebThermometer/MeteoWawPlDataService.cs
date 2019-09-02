@@ -5,15 +5,27 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-
 namespace WebThermometer
 {
     public class MeteoWawPlDataService : IDataService
     {
         private static readonly HttpClient _httpClient = new HttpClient
         {
-            Timeout = new TimeSpan(0, 0, 5),
+            Timeout = new TimeSpan(0, 0, 5)
         };
+
+        private static readonly HttpRequestMessage _httpRequest = new HttpRequestMessage()
+        {
+            RequestUri = new Uri(_url),
+            Method = HttpMethod.Get
+        };
+
+        static MeteoWawPlDataService()
+        {
+            _httpRequest.Headers.Add("Accept", "*/*");
+            _httpRequest.Headers.Add("Host", "www.meteo.waw.pl");
+        }
+
         private static readonly Regex _tempRegex = new Regex(@"<strong id=""PARAM_TA"">(.+?)</strong>", RegexOptions.Compiled);
         private static readonly Regex _humidRegex = new Regex(@"<strong id=""PARAM_RH"">(.+?)</strong>", RegexOptions.Compiled);
         private static readonly Regex _sensedTempRegex = new Regex(@"<strong id=""PARAM_WCH"">(.+?)</strong>", RegexOptions.Compiled);
@@ -21,8 +33,7 @@ namespace WebThermometer
         private static readonly Regex _windRegex = new Regex(@"<strong id=""PARAM_0_WV"">(.+?)</strong>", RegexOptions.Compiled);
         private static readonly Regex _timeRegex = new Regex(@"<strong id=""PARAM_LDATE"">(.+?)</strong>", RegexOptions.Compiled);
 
-        private readonly Uri _uri = new Uri(_url);
-        private const string _url = "http://www.meteo.waw.pl";
+        private const string _url = "https://meteo.waw.pl";
         private const string _ioErr = "Błąd połączenia";
         private const string _parseErr = "Błąd treści";
 
@@ -33,7 +44,8 @@ namespace WebThermometer
         {
             try
             {
-                _htmlSrc = await _httpClient.GetStringAsync(_uri);
+                var response = await _httpClient.SendAsync(_httpRequest);
+                _htmlSrc = await response.Content.ReadAsStringAsync();
                 _isInValidState = true;
             }
             catch
