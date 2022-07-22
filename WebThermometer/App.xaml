@@ -1,8 +1,8 @@
-﻿<Application x:Class="WebThermometer.App"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             StartupUri="MainWindow.xaml" Startup="AppStartup">
-    <Application.Resources>
-         
-    </Application.Resources>
+﻿<Application
+    x:Class="WebThermometer.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Startup="AppStartup"
+    StartupUri="MainWindow.xaml">
+    <Application.Resources />
 </Application>

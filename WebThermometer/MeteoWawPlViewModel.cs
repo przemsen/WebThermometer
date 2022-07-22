@@ -1,51 +1,47 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
+﻿using System.ComponentModel;
 using System.Threading.Tasks;
 
-namespace WebThermometer
+namespace WebThermometer;
+
+public class MeteoWawPlViewModel : IViewModel, INotifyPropertyChanged
 {
-    public class MeteoWawPlViewModel : IViewModel, INotifyPropertyChanged
+    private readonly IDataService _service;
+
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    public string Label1 => "Temperatura:";
+    public string Label2 => "T. odczuwalna:";
+    public string Label3 => "Wilgotność:";
+    public string Label4 => "Ciśnienie:";
+    public string Label5 => "Wiatr:";
+
+    public string Value1 { get; set; }
+    public string Value2 { get; set; }
+    public string Value3 { get; set; }
+    public string Value4 { get; set; }
+    public string Value5 { get; set; }
+    public string Status { get; set; }
+
+    public double? ParsedValue1 { get; set; }
+
+    public MeteoWawPlViewModel()
     {
-        private IDataService _service;
+        _service = new MeteoWawPlDataService();
+    }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+    public async Task Refresh()
+    {
+        await _service.Refresh();
+        (Value1, ParsedValue1) = _service.GetValue1(); OnPropertyChanged(nameof(Value1)); OnPropertyChanged(nameof(ParsedValue1));
+        Value2 = _service.GetValue2(); OnPropertyChanged(nameof(Value2));
+        Value3 = _service.GetValue3(); OnPropertyChanged(nameof(Value3));
+        Value4 = _service.GetValue4(); OnPropertyChanged(nameof(Value4));
+        Value5 = _service.GetValue5(); OnPropertyChanged(nameof(Value5));
+        Status = _service.GetStatus(); OnPropertyChanged(nameof(Status));
+    }
 
-        public string Label1 { get { return "Temperatura:";   } set { } }
-        public string Label2 { get { return "T. odczuwalna:"; } set { } }
-        public string Label3 { get { return "Wilgotność:";    } set { } }
-        public string Label4 { get { return "Ciśnienie:";     } set { } }
-        public string Label5 { get { return "Wiatr:";         } set { } }
-
-        public string Value1 { get; set; }
-        public string Value2 { get; set; }
-        public string Value3 { get; set; }
-        public string Value4 { get; set; }
-        public string Value5 { get; set; }
-        public string Status { get; set; }
-
-        public MeteoWawPlViewModel()
-        {
-            _service = new MeteoWawPlDataService();
-        }
-
-        public async Task Refresh()
-        {
-            await _service.Refresh();
-            Value1 = _service.GetValue1(); OnPropertyChanged("Value1");
-            Value2 = _service.GetValue2(); OnPropertyChanged("Value2");
-            Value3 = _service.GetValue3(); OnPropertyChanged("Value3");
-            Value4 = _service.GetValue4(); OnPropertyChanged("Value4");
-            Value5 = _service.GetValue5(); OnPropertyChanged("Value5");
-            Status = _service.GetStatus(); OnPropertyChanged("Status");
-        }
-
-        protected void OnPropertyChanged(string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
+    protected void OnPropertyChanged(string propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }
