@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace WebThermometer;
 
-public class MeteoWawPlViewModel : IViewModel, INotifyPropertyChanged
+public class MeteoWawPlWithAirlyViewModel : IViewModel, INotifyPropertyChanged
 {
     private readonly IDataService _service;
 
@@ -11,22 +11,23 @@ public class MeteoWawPlViewModel : IViewModel, INotifyPropertyChanged
 
     public string Label1 => "Temperatura:";
     public string Label2 => "T. odczuwalna:";
-    public string Label3 => "Wilgotność:";
+    public string Label3 => "Wiatr:";
     public string Label4 => "Ciśnienie:";
-    public string Label5 => "Wiatr:";
+    public string Label5 => "Airly CAQI:";
 
     public string Value1 { get; set; }
     public string Value2 { get; set; }
     public string Value3 { get; set; }
     public string Value4 { get; set; }
     public string Value5 { get; set; }
+    public string Value6 { get; set; }
     public string Status { get; set; }
 
     public double? ParsedValue1 { get; set; }
 
-    public MeteoWawPlViewModel()
+    public MeteoWawPlWithAirlyViewModel()
     {
-        _service = new MeteoWawPlDataService();
+        _service = new MeteoWawPlWithAirlyDataService();
     }
 
     public async Task Refresh()
@@ -37,7 +38,20 @@ public class MeteoWawPlViewModel : IViewModel, INotifyPropertyChanged
         Value3 = _service.GetValue3(); OnPropertyChanged(nameof(Value3));
         Value4 = _service.GetValue4(); OnPropertyChanged(nameof(Value4));
         Value5 = _service.GetValue5(); OnPropertyChanged(nameof(Value5));
+        Value6 = _service.GetValue6(); OnPropertyChanged(nameof(Value6));
         Status = _service.GetStatus(); OnPropertyChanged(nameof(Status));
+    }
+
+    public void Reset()
+    {
+        Value1 = null; OnPropertyChanged(nameof(Value1));
+        ParsedValue1 = null; OnPropertyChanged(nameof(ParsedValue1));
+        Value2 = null; OnPropertyChanged(nameof(Value2));
+        Value3 = null; OnPropertyChanged(nameof(Value3));
+        Value4 = null; OnPropertyChanged(nameof(Value4));
+        Value5 = null; OnPropertyChanged(nameof(Value5));
+        Value6 = null; OnPropertyChanged(nameof(Value6));
+        Status = null; OnPropertyChanged(nameof(Status));
     }
 
     protected void OnPropertyChanged(string propertyName = null)

@@ -14,8 +14,8 @@ namespace WebThermometer;
 
 public partial class MainWindow : Window
 {
-    private const int _defaultRefreshIntervalSec = 300;
-    private const int _waitForNetworkAfterSleepResumeDelayMillisec = 10000;
+    private const int _defaultRefreshIntervalSec = 480;
+    private const int _waitForNetworkAfterWorkstationUnlockDelayMillisec = 1500;
     private readonly App _app;
     private readonly DispatcherTimer _timer;
 
@@ -26,7 +26,8 @@ public partial class MainWindow : Window
         InitializeComponent();
         _app = (App)App.Current;
         SystemEvents.PowerModeChanged += OnPowerChange;
-        ViewModel = new MeteoWawPlViewModel();
+        SystemEvents.SessionSwitch += OnSessionSwitchChange;
+        ViewModel = new MeteoWawPlWithAirlyViewModel();
         DataContext = ViewModel;
 
         _timer = new DispatcherTimer();
@@ -40,15 +41,28 @@ public partial class MainWindow : Window
         BuildNumberRun.Text = inforVersion;
 
         ViewModel.Refresh();
+
+#if DEBUG
+        ShowInTaskbar = true;
+#endif
+
+    }
+
+    private void OnSessionSwitchChange(object sender, SessionSwitchEventArgs e)
+    {
+        if (e.Reason == SessionSwitchReason.SessionUnlock)
+        {
+            Thread.Sleep(_waitForNetworkAfterWorkstationUnlockDelayMillisec);
+            _timer.Start();
+            ViewModel.Refresh();
+        }
     }
 
     private void OnPowerChange(object s, PowerModeChangedEventArgs e)
     {
         if (e.Mode == PowerModes.Resume)
         {
-            Thread.Sleep(_waitForNetworkAfterSleepResumeDelayMillisec);
-            _timer.Start();
-            ViewModel.Refresh();
+            ViewModel.Reset();
         }
         else if (e.Mode == PowerModes.Suspend)
         {
@@ -131,6 +145,18 @@ public class TemperatureToColorConverter : IValueConverter
 
         return Colors.White;
     }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => null;
+}
+
+public class AirlyCaqiColorToColorConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+        value switch
+        {
+            string s when string.IsNullOrEmpty(s) is false => (Color)ColorConverter.ConvertFromString(s),
+            _ => Colors.White
+        };
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => null;
 }

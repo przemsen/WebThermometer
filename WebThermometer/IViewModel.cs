@@ -15,10 +15,13 @@ public interface IViewModel
     string Value3 { get; set; }
     string Value4 { get; set; }
     string Value5 { get; set; }
+    string Value6 { get; set; }
 
     double? ParsedValue1 { get; set; }
 
     string Status { get; set; }
 
     Task Refresh();
+
+    void Reset();
 }

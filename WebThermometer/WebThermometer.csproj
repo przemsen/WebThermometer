@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-        <TargetFramework>net6.0-windows</TargetFramework>
+        <TargetFramework>net7.0-windows</TargetFramework>
         <Nullable>disable</Nullable>
         <UseWPF>true</UseWPF>
 
@@ -20,8 +20,8 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <AssemblyVersion>3.0.0</AssemblyVersion>
-        <ProductVersion>3.0</ProductVersion>
+        <AssemblyVersion>4.0.0</AssemblyVersion>
+        <ProductVersion>4.0</ProductVersion>
         <InformationalVersion>$(CurrentDate)</InformationalVersion>
         <ProductName>WebThermometer</ProductName>
         <Company>Przemysław Seneczko</Company>
@@ -41,6 +41,12 @@
 
     <ItemGroup>
       <Resource Include="thermometer.ico" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="settings.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>

@@ -9,6 +9,7 @@ public interface IDataService
     string GetValue3();
     string GetValue4();
     string GetValue5();
+    string GetValue6();
     string GetStatus();
     Task Refresh();
 }

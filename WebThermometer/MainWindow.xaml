@@ -17,6 +17,7 @@
 
     <Window.Resources>
         <local:TemperatureToColorConverter x:Key="TemperatureToColorConverter" />
+        <local:AirlyCaqiColorToColorConverter x:Key="AirlyCaqiColorToColorConverter" />
     </Window.Resources>
 
     <Window.Background>
@@ -130,7 +131,11 @@
                 VerticalAlignment="Center"
                 Focusable="False"
                 IsReadOnly="True"
-                Text="{Binding Value5}" />
+                Text="{Binding Value5}">
+                <TextBox.Background>
+                    <SolidColorBrush Opacity="0.4" Color="{Binding Value6, Converter={StaticResource AirlyCaqiColorToColorConverter}}" />
+                </TextBox.Background>
+            </TextBox>
 
             <tb:TaskbarIcon
                 x:Name="TaskbarIcon"
