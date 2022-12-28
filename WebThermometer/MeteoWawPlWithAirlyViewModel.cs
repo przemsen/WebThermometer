@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Threading.Tasks;
 
 namespace WebThermometer;
@@ -40,6 +41,7 @@ public class MeteoWawPlWithAirlyViewModel : IViewModel, INotifyPropertyChanged
         Value5 = _service.GetValue5(); OnPropertyChanged(nameof(Value5));
         Value6 = _service.GetValue6(); OnPropertyChanged(nameof(Value6));
         Status = _service.GetStatus(); OnPropertyChanged(nameof(Status));
+        GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
     }
 
     public void Reset()

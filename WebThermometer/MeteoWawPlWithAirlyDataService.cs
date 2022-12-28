@@ -84,6 +84,13 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
             var data = await response.Content.ReadAsStringAsync();
 
             var indexOfStandards = data.IndexOf("\"standards\"");
+
+            if (indexOfStandards == -1)
+            {
+                _isAirlyInValidState = false;
+                return;
+            }
+
             var dataShortened = data[0..indexOfStandards];
             var dataShortenedTrimmed = dataShortened.TrimEnd();
             var dataShortenedTrimmedNoComma = dataShortenedTrimmed[0..^1];

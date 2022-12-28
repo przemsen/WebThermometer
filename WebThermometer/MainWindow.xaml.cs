@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
@@ -15,7 +16,7 @@ namespace WebThermometer;
 public partial class MainWindow : Window
 {
     private const int _defaultRefreshIntervalSec = 480;
-    private const int _waitForNetworkAfterWorkstationUnlockDelayMillisec = 1500;
+    private const int _waitForNetworkAfterWorkstationUnlockDelayMillisec = 1000;
     private readonly App _app;
     private readonly DispatcherTimer _timer;
 
@@ -48,25 +49,27 @@ public partial class MainWindow : Window
 
     }
 
-    private void OnSessionSwitchChange(object sender, SessionSwitchEventArgs e)
+    private async void OnSessionSwitchChange(object sender, SessionSwitchEventArgs e)
     {
         if (e.Reason == SessionSwitchReason.SessionUnlock)
         {
-            Thread.Sleep(_waitForNetworkAfterWorkstationUnlockDelayMillisec);
+            await Task.Delay(_waitForNetworkAfterWorkstationUnlockDelayMillisec);
+            await ViewModel.Refresh();
             _timer.Start();
-            ViewModel.Refresh();
+        }
+        else if (e.Reason == SessionSwitchReason.SessionLock)
+        {
+            _timer.Stop();
+            ViewModel.Reset();
         }
     }
 
     private void OnPowerChange(object s, PowerModeChangedEventArgs e)
     {
-        if (e.Mode == PowerModes.Resume)
-        {
-            ViewModel.Reset();
-        }
-        else if (e.Mode == PowerModes.Suspend)
+        if (e.Mode == PowerModes.Suspend)
         {
             _timer.Stop();
+            ViewModel.Reset();
         }
     }
 
@@ -154,7 +157,9 @@ public class AirlyCaqiColorToColorConverter : IValueConverter
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
         value switch
         {
-            string s when string.IsNullOrEmpty(s) is false => (Color)ColorConverter.ConvertFromString(s),
+            string s when
+                (string.IsNullOrEmpty(s) is false &&
+                 s.Contains('#')) => (Color)ColorConverter.ConvertFromString(s),
             _ => Colors.White
         };
 

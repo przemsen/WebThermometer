@@ -122,7 +122,18 @@
                 Grid.Row="4"
                 VerticalAlignment="Center"
                 Text="{Binding Label5}" />
+
+            <Border
+                Grid.Row="4"
+                Grid.Column="1"
+                Width="{Binding Width, ElementName=LastTextBox}"
+                Height="{Binding ActualHeight, ElementName=LastTextBox}"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                Background="White" />
+
             <TextBox
+                x:Name="LastTextBox"
                 Grid.Row="4"
                 Grid.Column="1"
                 Width="100"
