@@ -1,5 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+    <Import Project="GitHashVersion.props" />
+
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
         <TargetFramework>net7.0-windows</TargetFramework>
@@ -12,17 +14,13 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <CurrentDate>$([System.DateTime]::Now.ToString(yyyyMMddHHmm))</CurrentDate>
-    </PropertyGroup>
-
-    <PropertyGroup>
         <ApplicationIcon>thermometer.ico</ApplicationIcon>
     </PropertyGroup>
 
     <PropertyGroup>
         <AssemblyVersion>4.0.0</AssemblyVersion>
         <ProductVersion>4.0</ProductVersion>
-        <InformationalVersion>$(CurrentDate)</InformationalVersion>
+        <InformationalVersion>$(CurrentDate).$(GitHash)</InformationalVersion>
         <ProductName>WebThermometer</ProductName>
         <Company>Przemysław Seneczko</Company>
     </PropertyGroup>

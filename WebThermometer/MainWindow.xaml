@@ -158,7 +158,7 @@
 
                         <MenuItem IsEnabled="False">
                             <MenuItem.Header>
-                                <TextBlock HorizontalAlignment="Center" FontSize="9">
+                                <TextBlock HorizontalAlignment="Center" FontSize="10">
                                     Build&#160;<Run x:Name="BuildNumberRun" />
                                 </TextBlock>
                             </MenuItem.Header>

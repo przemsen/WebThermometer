@@ -1,4 +1,5 @@
 ﻿using Microsoft.Win32;
+using System;
 using System.Collections;
 using System.Diagnostics;
 using System.IO;
@@ -21,8 +22,16 @@ public partial class App : Application
     void AppStartup(object sender, StartupEventArgs args)
     {
         GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+        AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
     }
 
+    private void UnhandledExceptionHandler(object sender, UnhandledExceptionEventArgs e)
+    {
+        if (e.ExceptionObject is Exception ex)
+        {
+            System.IO.File.WriteAllText("error.txt", ex.ToString());
+        }
+    }
 }
 
 //-------------------------------------------------------------------------
