@@ -19,23 +19,25 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
         Timeout = new TimeSpan(0, 0, 5),
     };
 
-    [GeneratedRegex(@"<strong id=""PARAM_TA"">(.+?)</strong>")]
+    [GeneratedRegex(@"<div class=""plotbox_title"">temperatura:\s+<strong>(.+?)</strong>")]
     private static partial Regex _tempRegex();
 
-    [GeneratedRegex(@"<strong id=""PARAM_WCH"">(.+?)</strong>")]
+    [GeneratedRegex(@"<td>temperatura odczuwalna</td><th class=""ralign""><strong>(.+?)</strong>")]
     private static partial Regex _sensedTempRegex();
 
-    [GeneratedRegex(@"<strong id=""PARAM_PN"">(.+?)</strong>")]
-    private static partial Regex _pressRegex();
-
-    [GeneratedRegex(@"<strong id=""PARAM_0_WV"">(.+?)</strong>")]
+    [GeneratedRegex(@"prędkość:\s*<strong>(.+?)</strong>")]
     private static partial Regex _windRegex();
 
-    [GeneratedRegex(@"<strong id=""PARAM_LDATE"">(.+?)</strong>")]
+    [GeneratedRegex(@"Czas\s*pomiaru:\s*<div class=""right"">\s*<strong>(.+?)</strong>\s*CET<br>")]
     private static partial Regex _timeRegex();
 
-    private const string _meteoWawPlUrl = "https://meteo.waw.pl";
-    private static readonly string _airlyApiUrl = $"https://airapi.airly.eu/v2/measurements/installation?installationId={App.Settings.AirlyInstallationId}&apikey={App.Settings.AirlyApiKey}";
+    private const string _meteoWawPlHost = "sggw.meteo.waw.pl";
+    private const string _meteoWawPlUrl = $"https://{_meteoWawPlHost}";
+    private static readonly string _airlyApiUrl =
+        $"https://airapi.airly.eu/v2/measurements/installation?installationId={
+            App.Settings.AirlyInstallationId}&apikey={
+            App.Settings.AirlyApiKey}";
+
     private const string _ioErr = "Błąd połączenia";
     private const string _parseErr = "Błąd treści";
 
@@ -43,14 +45,15 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
     private bool _isMeteoInValidState;
     private bool _isAirlyInValidState = true;
 
-    private string _airlyValue = default;
-    private string _airlyColor = default;
+    private string _airlyValue;
+    private string _airlyColor;
+    private string _airlyPressure;
 
     private static HttpRequestMessage GetMeteoWawPlHttpRequestMessage() => new()
     {
         RequestUri = new Uri(_meteoWawPlUrl),
         Method = HttpMethod.Get,
-        Headers = { { "Accept", "*/*" }, { "Host", "www.meteo.waw.pl" } }
+        Headers = { { "Accept", "*/*" }, { "Host", _meteoWawPlHost } }
     };
 
     private static HttpRequestMessage GetAirlyHttpRequestMessage() => new()
@@ -103,6 +106,16 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
             var jsonRootCurrentIndexesFirstValue = jsonRootCurrentIndexesFirst["value"].GetValue<double>().ToString();
             var jsonRootCurrentIndexesFirstColor = jsonRootCurrentIndexesFirst["color"].GetValue<string>();
 
+            var jsonRootCurrentValues            = jsonRootCurrent["values"].AsArray();
+            foreach (var v in jsonRootCurrentValues)
+            {
+                if (v["name"].GetValue<string>() == "PRESSURE")
+                {
+                    _airlyPressure = v["value"].GetValue<double>().ToString();
+                    break;
+                }
+            }
+
             _airlyValue = jsonRootCurrentIndexesFirstValue;
             _airlyColor = jsonRootCurrentIndexesFirstColor;
 
@@ -139,39 +152,26 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
         return ParseTargetValueImpl(_windRegex(), " m/s");
     }
 
-    public string GetValue4()
+    public string GetValue4() => _isAirlyInValidState switch
     {
-        return ParseTargetValueImpl(_pressRegex(), " hPa");
-    }
+        true => $"{_airlyPressure} hPa",
+        _ => _parseErr
+    };
 
-    public string GetValue5()
+    public string GetValue5() => _isAirlyInValidState switch
     {
-        if (_isAirlyInValidState)
-        {
-            return _airlyValue;
-        }
-        else
-        {
-            return _parseErr;
-        }
-    }
+        true => _airlyValue,
+        _ => _parseErr
+    };
 
-    public string GetValue6()
+    public string GetValue6() => _isAirlyInValidState switch
     {
-        if (_isAirlyInValidState)
-        {
-            return _airlyColor;
-        }
-        else
-        {
-            return _parseErr;
-        }
-    }
+        true => _airlyColor,
+        _ => _parseErr
+    };
 
-    public string GetStatus()
-    {
-        return $"Updated: {ParseTargetValueImpl(_timeRegex(), string.Empty)}";
-    }
+    public string GetStatus() =>
+        $"Updated: {ParseTargetValueImpl(_timeRegex(), string.Empty)}";
 
     private string ParseTargetValueImpl(Regex regex, string appendText)
     {
@@ -186,6 +186,6 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
             return _parseErr;
         }
 
-        return $"{match.Groups[1].Value.Trim()}{appendText}";
+        return match.Groups[1].Value.Trim() + appendText;
     }
 }
