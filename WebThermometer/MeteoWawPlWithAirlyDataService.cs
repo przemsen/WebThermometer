@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Net.Http;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
@@ -18,6 +19,8 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
     {
         Timeout = new TimeSpan(0, 0, 5),
     };
+
+    private static readonly NumberFormatInfo _numberFormat = new() { NumberDecimalSeparator = "," };
 
     [GeneratedRegex(@">(.+?)<sup>&#176;C</sup></dl>", RegexOptions.NonBacktracking)]
     private static partial Regex _tempRegex();
@@ -136,13 +139,15 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
     public (string textValue, double? numberValue) GetValue1()
     {
         const string degreesString = " °C";
+        const string format = "0.0";
+
         double? numberValue = null;
         string textValue = null;
 
         if (_isAirlyInValidState)
         {
             numberValue = _airlyTemp;
-            textValue = _airlyTemp.ToString();
+            textValue = _airlyTemp.ToString(format, _numberFormat);
         }
         else
         {
@@ -152,6 +157,7 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
                 if (double.TryParse(textValue, out double result))
                 {
                     numberValue = result;
+                    textValue = result.ToString(format, _numberFormat);
                 }
             }
             else
