@@ -19,24 +19,20 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
         Timeout = new TimeSpan(0, 0, 5),
     };
 
-    [GeneratedRegex(@"<div class=""plotbox_title"">temperatura:\s+<strong>(.+?)</strong>")]
+    [GeneratedRegex(@">(.+?)<sup>&#176;C</sup></dl>", RegexOptions.NonBacktracking)]
     private static partial Regex _tempRegex();
 
-    [GeneratedRegex(@"<td>temperatura odczuwalna</td><th class=""ralign""><strong>(.+?)</strong>")]
+    [GeneratedRegex(@"<dt>temp. odczuwalna</dt><dd>(.+?)<sup>", RegexOptions.NonBacktracking)]
     private static partial Regex _sensedTempRegex();
 
-    [GeneratedRegex(@"prędkość:\s*<strong>(.+?)</strong>")]
+    [GeneratedRegex(@"</dt><dd>(.+?)<sup>km/h</sup>", RegexOptions.NonBacktracking)]
     private static partial Regex _windRegex();
 
-    [GeneratedRegex(@"Czas\s*pomiaru:\s*<div class=""right"">\s*<strong>(.+?)</strong>\s*CET<br>")]
+    [GeneratedRegex(@"<label>czas pomiaru aktualnych warunków: (.+?)</label>")]
     private static partial Regex _timeRegex();
 
-    private const string _meteoWawPlHost = "sggw.meteo.waw.pl";
-    private const string _meteoWawPlUrl = $"https://{_meteoWawPlHost}";
-    private static readonly string _airlyApiUrl =
-        $"https://airapi.airly.eu/v2/measurements/installation?installationId={
-            App.Settings.AirlyInstallationId}&apikey={
-            App.Settings.AirlyApiKey}";
+    private const string _meteoHost = "meteo.org.pl";
+    private const string _meteoUrl = $"https://{_meteoHost}/warszawa";
 
     private const string _ioErr = "Błąd połączenia";
     private const string _parseErr = "Błąd treści";
@@ -48,12 +44,19 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
     private string _airlyValue;
     private string _airlyColor;
     private string _airlyPressure;
+    private double _airlyTemp;
 
-    private static HttpRequestMessage GetMeteoWawPlHttpRequestMessage() => new()
+    private const string _airlyHost = "airapi.airly.eu";
+    private static readonly string _airlyApiUrl =
+        $"https://{_airlyHost}/v2/measurements/installation?installationId={
+            App.Settings.AirlyInstallationId}&apikey={
+            App.Settings.AirlyApiKey}";
+
+    private static HttpRequestMessage GetMeteoHttpRequestMessage() => new()
     {
-        RequestUri = new Uri(_meteoWawPlUrl),
+        RequestUri = new Uri(_meteoUrl),
         Method = HttpMethod.Get,
-        Headers = { { "Accept", "*/*" }, { "Host", _meteoWawPlHost } }
+        Headers = { { "Accept", "*/*" }, { "Host", _meteoHost } }
     };
 
     private static HttpRequestMessage GetAirlyHttpRequestMessage() => new()
@@ -66,7 +69,7 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
     {
         try
         {
-            var response = await _httpClient.SendAsync(GetMeteoWawPlHttpRequestMessage());
+            var response = await _httpClient.SendAsync(GetMeteoHttpRequestMessage());
             _htmlSrc = await response.Content.ReadAsStringAsync();
             _isMeteoInValidState = true;
         }
@@ -112,7 +115,10 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
                 if (v["name"].GetValue<string>() == "PRESSURE")
                 {
                     _airlyPressure = v["value"].GetValue<double>().ToString();
-                    break;
+                }
+                else if (v["name"].GetValue<string>() == "TEMPERATURE")
+                {
+                    _airlyTemp = v["value"].GetValue<double>();
                 }
             }
 
@@ -130,13 +136,29 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
     public (string textValue, double? numberValue) GetValue1()
     {
         const string degreesString = " °C";
-
-        var textValue = ParseTargetValueImpl(_tempRegex(), appendText: null );
         double? numberValue = null;
+        string textValue = null;
 
-        if (double.TryParse(textValue, out double parsedNumber))
+        if (_isAirlyInValidState)
         {
-            numberValue = parsedNumber;
+            numberValue = _airlyTemp;
+            textValue = _airlyTemp.ToString();
+        }
+        else
+        {
+            if (_isMeteoInValidState)
+            {
+                textValue = ParseTargetValueImpl(_tempRegex(), string.Empty);
+                if (double.TryParse(textValue, out double result))
+                {
+                    numberValue = result;
+                }
+            }
+            else
+            {
+                textValue = _parseErr;
+            }
+
         }
 
         return ($"{textValue}{degreesString}", numberValue);
@@ -149,7 +171,7 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
 
     public string GetValue3()
     {
-        return ParseTargetValueImpl(_windRegex(), " m/s");
+        return ParseTargetValueImpl(_windRegex(), " km/h");
     }
 
     public string GetValue4() => _isAirlyInValidState switch
