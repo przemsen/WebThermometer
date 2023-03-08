@@ -31,9 +31,6 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
     [GeneratedRegex(@"</dt><dd>(.+?)<sup>km/h</sup>", RegexOptions.NonBacktracking)]
     private static partial Regex _windRegex();
 
-    [GeneratedRegex(@"<label>czas pomiaru aktualnych warunków: (.+?)</label>")]
-    private static partial Regex _timeRegex();
-
     private const string _meteoHost = "meteo.org.pl";
     private const string _meteoUrl = $"https://{_meteoHost}/warszawa";
 
@@ -41,8 +38,8 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
     private const string _parseErr = "Błąd treści";
 
     private string _htmlSrc;
-    private bool _isMeteoInValidState;
-    private bool _isAirlyInValidState = true;
+    private bool? _isMeteoInValidState = false;
+    private bool? _isAirlyInValidState = false;
 
     private string _airlyValue;
     private string _airlyColor;
@@ -70,70 +67,79 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
 
     public async Task Refresh()
     {
-        try
+        if (App.Settings.DataSource is DataSources.WwwMeteo or DataSources.Both)
         {
-            var response = await _httpClient.SendAsync(GetMeteoHttpRequestMessage());
-            _htmlSrc = await response.Content.ReadAsStringAsync();
-            _isMeteoInValidState = true;
+            try
+            {
+                var response = await _httpClient.SendAsync(GetMeteoHttpRequestMessage());
+                _htmlSrc = await response.Content.ReadAsStringAsync();
+                _isMeteoInValidState = true;
+            }
+            catch
+            {
+                _isMeteoInValidState = false;
+            }
         }
-        catch
+        else
         {
-            _isMeteoInValidState = false;
+            _isMeteoInValidState = null;
         }
 
-        if (App.Settings is { AirlyApiKey: null } or { AirlyInstallationId: null })
+        if (App.Settings.DataSource is DataSources.Airly or DataSources.Both)
         {
-            _isAirlyInValidState = true;
-            return;
-        }
+            try
+            {
+                var response = await _httpClient.SendAsync(GetAirlyHttpRequestMessage());
+                var data = await response.Content.ReadAsStringAsync();
 
-        try
-        {
-            var response = await _httpClient.SendAsync(GetAirlyHttpRequestMessage());
-            var data = await response.Content.ReadAsStringAsync();
+                var indexOfStandards = data.IndexOf("\"standards\"");
 
-            var indexOfStandards = data.IndexOf("\"standards\"");
+                if (indexOfStandards == -1)
+                {
+                    _isAirlyInValidState = false;
+                    return;
+                }
 
-            if (indexOfStandards == -1)
+                var dataShortened = data[0..indexOfStandards];
+                var dataShortenedTrimmed = dataShortened.TrimEnd();
+                var dataShortenedTrimmedNoComma = dataShortenedTrimmed[0..^1];
+                var targetDataShortened = $"{dataShortenedTrimmedNoComma}}}}}";
+
+                var jsonRoot                         = JsonNode.Parse(targetDataShortened);
+                var jsonRootCurrent                  = jsonRoot["current"];
+                var jsonRootCurrentIndexes           = jsonRootCurrent["indexes"].AsArray();
+                var jsonRootCurrentIndexesFirst      = jsonRootCurrentIndexes[0];
+                var jsonRootCurrentIndexesFirstValue = jsonRootCurrentIndexesFirst["value"].GetValue<double>().ToString();
+                var jsonRootCurrentIndexesFirstColor = jsonRootCurrentIndexesFirst["color"].GetValue<string>();
+
+                var jsonRootCurrentValues            = jsonRootCurrent["values"].AsArray();
+                foreach (var v in jsonRootCurrentValues)
+                {
+                    if (v["name"].GetValue<string>() == "PRESSURE")
+                    {
+                        _airlyPressure = v["value"].GetValue<double>().ToString();
+                    }
+                    else if (v["name"].GetValue<string>() == "TEMPERATURE")
+                    {
+                        _airlyTemp = v["value"].GetValue<double>();
+                    }
+                }
+
+                _airlyValue = jsonRootCurrentIndexesFirstValue;
+                _airlyColor = jsonRootCurrentIndexesFirstColor;
+
+                _isAirlyInValidState = true;
+            }
+            catch
             {
                 _isAirlyInValidState = false;
-                return;
             }
-
-            var dataShortened = data[0..indexOfStandards];
-            var dataShortenedTrimmed = dataShortened.TrimEnd();
-            var dataShortenedTrimmedNoComma = dataShortenedTrimmed[0..^1];
-            var targetDataShortened = $"{dataShortenedTrimmedNoComma}}}}}";
-
-            var jsonRoot                         = JsonNode.Parse(targetDataShortened);
-            var jsonRootCurrent                  = jsonRoot["current"];
-            var jsonRootCurrentIndexes           = jsonRootCurrent["indexes"].AsArray();
-            var jsonRootCurrentIndexesFirst      = jsonRootCurrentIndexes[0];
-            var jsonRootCurrentIndexesFirstValue = jsonRootCurrentIndexesFirst["value"].GetValue<double>().ToString();
-            var jsonRootCurrentIndexesFirstColor = jsonRootCurrentIndexesFirst["color"].GetValue<string>();
-
-            var jsonRootCurrentValues            = jsonRootCurrent["values"].AsArray();
-            foreach (var v in jsonRootCurrentValues)
-            {
-                if (v["name"].GetValue<string>() == "PRESSURE")
-                {
-                    _airlyPressure = v["value"].GetValue<double>().ToString();
-                }
-                else if (v["name"].GetValue<string>() == "TEMPERATURE")
-                {
-                    _airlyTemp = v["value"].GetValue<double>();
-                }
-            }
-
-            _airlyValue = jsonRootCurrentIndexesFirstValue;
-            _airlyColor = jsonRootCurrentIndexesFirstColor;
-
-            _isAirlyInValidState = true;
         }
-        catch
+        else
         {
-            _isAirlyInValidState = false;
+            _isAirlyInValidState = null;
         }
+
     }
 
     public (string textValue, double? numberValue) GetValue1()
@@ -144,14 +150,14 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
         double? numberValue = null;
         string textValue = null;
 
-        if (_isAirlyInValidState)
+        if (_isAirlyInValidState is true)
         {
             numberValue = _airlyTemp;
             textValue = _airlyTemp.ToString(format, _numberFormat);
         }
         else
         {
-            if (_isMeteoInValidState)
+            if (_isMeteoInValidState is true)
             {
                 textValue = ParseTargetValueImpl(_tempRegex(), string.Empty);
                 if (double.TryParse(textValue, out double result))
@@ -183,35 +189,48 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
     public string GetValue4() => _isAirlyInValidState switch
     {
         true => $"{_airlyPressure} hPa",
-        _ => _parseErr
+        false => _parseErr,
+        null => string.Empty
     };
 
     public string GetValue5() => _isAirlyInValidState switch
     {
         true => _airlyValue,
-        _ => _parseErr
+        false => _parseErr,
+        null => string.Empty
     };
 
     public string GetValue6() => _isAirlyInValidState switch
     {
         true => _airlyColor,
-        _ => _parseErr
+        _ => string.Empty
     };
 
-    public string GetStatus() =>
-        $"Updated: {ParseTargetValueImpl(_timeRegex(), string.Empty)}";
+    public string GetStatus() => $"Updated: {DateTime.Now}";
 
     private string ParseTargetValueImpl(Regex regex, string appendText)
     {
-        if (!_isMeteoInValidState)
+        string ret = _isMeteoInValidState switch
         {
-            return _ioErr;
+            false => _ioErr,
+            null => string.Empty,
+            true => null,
+        };
+
+        if (ret is not null)
+        {
+            return ret;
         }
 
         var match = regex.Match(_htmlSrc);
         if (!match.Success)
         {
-            return _parseErr;
+            ret = _parseErr;
+        }
+
+        if (ret is not null)
+        {
+            return ret;
         }
 
         return match.Groups[1].Value.Trim() + appendText;

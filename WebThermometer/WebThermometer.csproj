@@ -42,7 +42,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Update="settings.json">
+      <None Update="settings.json" CopyToPublishDirectory="Never">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
     </ItemGroup>
