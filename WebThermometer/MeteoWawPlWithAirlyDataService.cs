@@ -22,17 +22,20 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
 
     private static readonly NumberFormatInfo _numberFormat = new() { NumberDecimalSeparator = "," };
 
-    [GeneratedRegex(@">(.+?)<sup>&#176;C</sup></dl>", RegexOptions.NonBacktracking)]
+    [GeneratedRegex(@"<strong id=""PARAM_TA"">(.+?)</strong>", RegexOptions.NonBacktracking)]
     private static partial Regex _tempRegex();
 
-    [GeneratedRegex(@"<dt>temp. odczuwalna</dt><dd>(.+?)<sup>", RegexOptions.NonBacktracking)]
+    [GeneratedRegex(@"<strong id=""PARAM_WCH"">(.+?)</strong>", RegexOptions.NonBacktracking)]
     private static partial Regex _sensedTempRegex();
 
-    [GeneratedRegex(@"</dt><dd>(.+?)<sup>km/h</sup>", RegexOptions.NonBacktracking)]
+    [GeneratedRegex(@"<strong id=""PARAM_0_WV"">(.+?)</strong>", RegexOptions.NonBacktracking)]
     private static partial Regex _windRegex();
 
-    private const string _meteoHost = "meteo.org.pl";
-    private const string _meteoUrl = $"https://{_meteoHost}/warszawa";
+    [GeneratedRegex(@"<strong id=""PARAM_0_PR"">(.+?)</strong>", RegexOptions.NonBacktracking)]
+    private static partial Regex _pressureRegex();
+
+    private const string _meteoHost = "meteo.waw.pl";
+    private const string _meteoUrl = $"https://{_meteoHost}";
 
     private const string _ioErr = "Błąd połączenia";
     private const string _parseErr = "Błąd treści";
@@ -183,14 +186,18 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
 
     public string GetValue3()
     {
-        return ParseTargetValueImpl(_windRegex(), " km/h");
+        return ParseTargetValueImpl(_windRegex(), " m/s");
     }
 
     public string GetValue4() => _isAirlyInValidState switch
     {
         true => $"{_airlyPressure} hPa",
-        false => _parseErr,
-        null => string.Empty
+        _ => _isMeteoInValidState switch
+        {
+            true => ParseTargetValueImpl(_pressureRegex(), " hPa"),
+            false => _parseErr,
+            null => string.Empty
+        }
     };
 
     public string GetValue5() => _isAirlyInValidState switch
