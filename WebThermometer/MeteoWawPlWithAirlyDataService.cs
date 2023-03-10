@@ -168,6 +168,10 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
                     numberValue = result;
                     textValue = result.ToString(format, _numberFormat);
                 }
+                else
+                {
+                    textValue = _parseErr;
+                }
             }
             else
             {
@@ -195,8 +199,7 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
         _ => _isMeteoInValidState switch
         {
             true => ParseTargetValueImpl(_pressureRegex(), " hPa"),
-            false => _parseErr,
-            null => string.Empty
+            _ => _parseErr
         }
     };
 
