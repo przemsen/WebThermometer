@@ -71,7 +71,16 @@
                 VerticalAlignment="Center"
                 Focusable="False"
                 IsReadOnly="True"
-                Text="{Binding Value1}" />
+                Text="{Binding Value1}">
+
+                <TextBox.ToolTip>
+                    <TextBlock>
+                        <Run Text="{Binding Mode=OneWay, Path=Label7}" />
+                        <Run Text="{Binding Mode=OneWay, Path=Value7}" />
+                    </TextBlock>
+                </TextBox.ToolTip>
+
+            </TextBox>
 
             <TextBlock
                 Grid.Row="1"

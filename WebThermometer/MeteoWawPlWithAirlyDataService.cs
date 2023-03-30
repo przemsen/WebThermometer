@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using static System.Windows.Forms.DataFormats;
 
 namespace WebThermometer;
 
@@ -20,7 +21,8 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
         Timeout = new TimeSpan(0, 0, 5),
     };
 
-    private static readonly NumberFormatInfo _numberFormat = new() { NumberDecimalSeparator = "," };
+    private static readonly NumberFormatInfo _numberFormatInfo = new() { NumberDecimalSeparator = "," };
+    private const string _numberFormat = "0.0";
 
     [GeneratedRegex(@"<strong id=""PARAM_TA"">(.+?)</strong>", RegexOptions.NonBacktracking)]
     private static partial Regex _tempRegex();
@@ -48,6 +50,7 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
     private string _airlyColor;
     private string _airlyPressure;
     private double _airlyTemp;
+    private double _airlyHumid;
 
     private const string _airlyHost = "airapi.airly.eu";
     private static readonly string _airlyApiUrl =
@@ -72,6 +75,7 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
     {
         if (App.Settings.DataSource is DataSources.WwwMeteo or DataSources.Both)
         {
+            _isMeteoInValidState = false;
             try
             {
                 var response = await _httpClient.SendAsync(GetMeteoHttpRequestMessage());
@@ -80,7 +84,7 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
             }
             catch
             {
-                _isMeteoInValidState = false;
+
             }
         }
         else
@@ -90,6 +94,12 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
 
         if (App.Settings.DataSource is DataSources.Airly or DataSources.Both)
         {
+            _airlyPressure = string.Empty;
+            _airlyTemp = default;
+            _airlyValue = string.Empty;
+            _airlyColor = string.Empty;
+            _isAirlyInValidState = false;
+
             try
             {
                 var response = await _httpClient.SendAsync(GetAirlyHttpRequestMessage());
@@ -112,30 +122,37 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
                 var jsonRootCurrent                  = jsonRoot["current"];
                 var jsonRootCurrentIndexes           = jsonRootCurrent["indexes"].AsArray();
                 var jsonRootCurrentIndexesFirst      = jsonRootCurrentIndexes[0];
-                var jsonRootCurrentIndexesFirstValue = jsonRootCurrentIndexesFirst["value"].GetValue<double>().ToString();
+                var jsonRootCurrentIndexesFirstValue = jsonRootCurrentIndexesFirst["value"].GetValue<double>().ToString(_numberFormat, _numberFormatInfo);
                 var jsonRootCurrentIndexesFirstColor = jsonRootCurrentIndexesFirst["color"].GetValue<string>();
 
                 var jsonRootCurrentValues            = jsonRootCurrent["values"].AsArray();
                 foreach (var v in jsonRootCurrentValues)
                 {
-                    if (v["name"].GetValue<string>() == "PRESSURE")
+                    var name = v["name"].GetValue<string>();
+                    var value = v["value"].GetValue<double>();
+
+                    if (name == "PRESSURE")
                     {
-                        _airlyPressure = v["value"].GetValue<double>().ToString();
+                        _airlyPressure = value.ToString(_numberFormat, _numberFormatInfo);
                     }
-                    else if (v["name"].GetValue<string>() == "TEMPERATURE")
+                    else if (name == "TEMPERATURE")
                     {
-                        _airlyTemp = v["value"].GetValue<double>();
+                        _airlyTemp = value;
+                        _isAirlyInValidState = true;
+                    }
+                    else if (name == "HUMIDITY")
+                    {
+                        _airlyHumid = value;
                     }
                 }
 
                 _airlyValue = jsonRootCurrentIndexesFirstValue;
                 _airlyColor = jsonRootCurrentIndexesFirstColor;
 
-                _isAirlyInValidState = true;
             }
             catch
             {
-                _isAirlyInValidState = false;
+
             }
         }
         else
@@ -148,15 +165,14 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
     public (string textValue, double? numberValue) GetValue1()
     {
         const string degreesString = " °C";
-        const string format = "0.0";
 
         double? numberValue = null;
-        string textValue = null;
+        string textValue;
 
         if (_isAirlyInValidState is true)
         {
             numberValue = _airlyTemp;
-            textValue = _airlyTemp.ToString(format, _numberFormat);
+            textValue = _airlyTemp.ToString(_numberFormat, _numberFormatInfo);
         }
         else
         {
@@ -166,7 +182,7 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
                 if (double.TryParse(textValue, out double result))
                 {
                     numberValue = result;
-                    textValue = result.ToString(format, _numberFormat);
+                    textValue = result.ToString(_numberFormat, _numberFormatInfo);
                 }
                 else
                 {
@@ -213,6 +229,12 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
     public string GetValue6() => _isAirlyInValidState switch
     {
         true => _airlyColor,
+        _ => string.Empty
+    };
+
+    public string GetValue7() => _isAirlyInValidState switch
+    {
+        true => _airlyHumid.ToString(_numberFormat, _numberFormatInfo),
         _ => string.Empty
     };
 

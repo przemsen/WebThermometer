@@ -15,6 +15,7 @@ public class MeteoWawPlWithAirlyViewModel : IViewModel, INotifyPropertyChanged
     public string Label3 => "Wiatr:";
     public string Label4 => "Ciśnienie:";
     public string Label5 => "Airly CAQI:";
+    public string Label7 => "Wilgotność:";
 
     public string Value1 { get; set; }
     public string Value2 { get; set; }
@@ -22,6 +23,7 @@ public class MeteoWawPlWithAirlyViewModel : IViewModel, INotifyPropertyChanged
     public string Value4 { get; set; }
     public string Value5 { get; set; }
     public string Value6 { get; set; }
+    public string Value7 { get; set; }
     public string Status { get; set; }
 
     public double? ParsedValue1 { get; set; }
@@ -40,6 +42,7 @@ public class MeteoWawPlWithAirlyViewModel : IViewModel, INotifyPropertyChanged
         Value4 = _service.GetValue4(); OnPropertyChanged(nameof(Value4));
         Value5 = _service.GetValue5(); OnPropertyChanged(nameof(Value5));
         Value6 = _service.GetValue6(); OnPropertyChanged(nameof(Value6));
+        Value7 = _service.GetValue7(); OnPropertyChanged(nameof(Value7));
         Status = _service.GetStatus(); OnPropertyChanged(nameof(Status));
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
     }

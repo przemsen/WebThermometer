@@ -9,6 +9,7 @@ public interface IViewModel
     string Label3 { get; }
     string Label4 { get; }
     string Label5 { get; }
+    string Label7 { get; }
 
     string Value1 { get; set; }
     string Value2 { get; set; }
@@ -16,6 +17,7 @@ public interface IViewModel
     string Value4 { get; set; }
     string Value5 { get; set; }
     string Value6 { get; set; }
+    string Value7 { get; set; }
 
     double? ParsedValue1 { get; set; }
 
