@@ -1,4 +1,12 @@
 {
-  "AirlyInstallationId": null,
-  "AirlyApiKey": null
+  /* Airly, WwwMeteo, Both */
+  "DataSource": "WwwMeteo",
+
+  /*
+    Argentynska - 6630
+    Algierska - 36598
+  */
+  "AirlyInstallationId": 36598,
+
+  "AirlyApiKey": ""
 }
