@@ -4,10 +4,9 @@
 
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-        <TargetFramework>net7.0-windows</TargetFramework>
+        <TargetFramework>net8.0-windows</TargetFramework>
         <Nullable>disable</Nullable>
         <UseWPF>true</UseWPF>
-        <PublishReadyToRun>true</PublishReadyToRun>
 
         <!-- Do not produce pdb, but embed symbols instead. Allows for line numbers in stack traces -->
         <DebugSymbols>true</DebugSymbols>
@@ -16,6 +15,10 @@
 
     <PropertyGroup>
         <ApplicationIcon>thermometer.ico</ApplicationIcon>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <NoWarn>$(NoWarn);RCS1173;RCS1036RCS1049</NoWarn>
     </PropertyGroup>
 
     <PropertyGroup>

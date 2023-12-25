@@ -6,7 +6,7 @@ namespace WebThermometer;
 
 public class MeteoWawPlWithAirlyViewModel : IViewModel, INotifyPropertyChanged
 {
-    private readonly IDataService _service;
+    private readonly MeteoWawPlWithAirlyDataService _service;
 
     public event PropertyChangedEventHandler PropertyChanged;
 

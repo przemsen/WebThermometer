@@ -24,16 +24,16 @@ public partial class MeteoWawPlWithAirlyDataService : IDataService
     private static readonly NumberFormatInfo _numberFormatInfo = new() { NumberDecimalSeparator = "," };
     private const string _numberFormat = "0.0";
 
-    [GeneratedRegex(@"<strong id=""PARAM_TA"">(.+?)</strong>", RegexOptions.NonBacktracking)]
+    [GeneratedRegex(@"<strong id=""PARAM_TA"">(.+?)</strong>")]
     private static partial Regex _tempRegex();
 
-    [GeneratedRegex(@"<strong id=""PARAM_WCH"">(.+?)</strong>", RegexOptions.NonBacktracking)]
+    [GeneratedRegex(@"<strong id=""PARAM_WCH"">(.+?)</strong>")]
     private static partial Regex _sensedTempRegex();
 
-    [GeneratedRegex(@"<strong id=""PARAM_0_WV"">(.+?)</strong>", RegexOptions.NonBacktracking)]
+    [GeneratedRegex(@"<strong id=""PARAM_0_WV"">(.+?)</strong>")]
     private static partial Regex _windRegex();
 
-    [GeneratedRegex(@"<strong id=""PARAM_0_PR"">(.+?)</strong>", RegexOptions.NonBacktracking)]
+    [GeneratedRegex(@"<strong id=""PARAM_0_PR"">(.+?)</strong>")]
     private static partial Regex _pressureRegex();
 
     private const string _meteoHost = "meteo.waw.pl";
