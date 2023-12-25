@@ -23,7 +23,7 @@
 
     <PropertyGroup>
         <AssemblyVersion>4.0.0</AssemblyVersion>
-        <ProductVersion>4.0</ProductVersion>
+        <IncludeSourceRevisionInInformationalVersion>fasle</IncludeSourceRevisionInInformationalVersion>
         <InformationalVersion>$(CurrentDate).$(GitHash)</InformationalVersion>
         <ProductName>WebThermometer</ProductName>
         <Company>Przemysław Seneczko</Company>
