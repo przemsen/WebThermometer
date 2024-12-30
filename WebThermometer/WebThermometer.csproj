@@ -4,7 +4,7 @@
 
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-        <TargetFramework>net8.0-windows</TargetFramework>
+        <TargetFramework>net9.0-windows</TargetFramework>
         <Nullable>disable</Nullable>
         <UseWPF>true</UseWPF>
         <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
@@ -31,7 +31,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Hardcodet.NotifyIcon.WPF" Version="1.1.0" />
+        <PackageReference Include="Hardcodet.NotifyIcon.WPF" Version="*" />
     </ItemGroup>
 
     <ItemGroup>
